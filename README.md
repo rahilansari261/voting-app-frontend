@@ -1,36 +1,134 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VoteApp Frontend
+
+A modern, responsive voting application built with Next.js 14, TypeScript, and Tailwind CSS.
+
+## Features
+
+- **Modern UI/UX**: Clean, responsive design with dark/light mode support
+- **Real-time Updates**: Live poll results and notifications
+- **Authentication**: Secure user registration and login
+- **Poll Management**: Create, edit, and manage polls
+- **Voting Interface**: Intuitive voting with multiple choice support
+- **Results Visualization**: Beautiful charts and analytics
+- **Mobile Responsive**: Optimized for all device sizes
+
+## Tech Stack
+
+- **Framework**: Next.js 14 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui
+- **State Management**: Zustand
+- **Forms**: React Hook Form with Zod validation
+- **HTTP Client**: Axios
+- **Real-time**: Socket.io
+- **Icons**: Lucide React
+- **Date Handling**: date-fns
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+ 
+- npm or yarn
+
+### Installation
+
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Set up environment variables:
+```bash
+cp .env.local.example .env.local
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Update the environment variables in `.env.local`:
+```
+NEXT_PUBLIC_API_URL=http://localhost:3001/api
+NEXT_PUBLIC_WS_URL=ws://localhost:3001
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Run the development server:
+```bash
+npm run dev
+```
 
-## Learn More
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── dashboard/         # Dashboard page
+│   ├── login/            # Login page
+│   ├── register/         # Registration page
+│   ├── polls/            # Polls pages
+│   └── layout.tsx        # Root layout
+├── components/            # Reusable components
+│   ├── auth/             # Authentication components
+│   ├── polls/            # Poll-related components
+│   ├── layout/           # Layout components
+│   └── ui/               # shadcn/ui components
+├── hooks/                # Custom React hooks
+├── services/             # API services
+├── store/                # Zustand stores
+├── types/                # TypeScript type definitions
+└── lib/                  # Utility functions
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Available Scripts
 
-## Deploy on Vercel
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Features Overview
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Authentication
+- User registration and login
+- JWT token-based authentication
+- Protected routes
+- User profile management
+
+### Poll Management
+- Create polls with multiple options
+- Set poll duration and visibility
+- Support for single and multiple choice
+- Anonymous voting option
+- Real-time poll status updates
+
+### Voting Interface
+- Intuitive voting interface
+- Real-time vote counting
+- Results visualization
+- Vote confirmation
+
+### Dashboard
+- User statistics
+- Poll management
+- Recent activity
+- Quick actions
+
+## API Integration
+
+The frontend integrates with a REST API for:
+- User authentication
+- Poll CRUD operations
+- Voting functionality
+- Real-time updates via WebSocket
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
