@@ -2,6 +2,8 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
+import AuthProvider from '@/components/auth/AuthProvider';
+import { RouteGuardProvider } from '@/contexts/RouteGuardContext';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -19,7 +21,11 @@ export function Providers({ children }: ProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <AuthProvider>
+        <RouteGuardProvider>
+          {children}
+        </RouteGuardProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

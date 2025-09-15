@@ -3,13 +3,20 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Menu, X, BarChart3 } from 'lucide-react';
+import { Menu, X, BarChart3, Plus, LogOut, User } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setIsMenuOpen(false);
   };
 
   return (
@@ -22,26 +29,37 @@ export default function Header() {
             <span className="text-xl font-bold text-gray-900">VoteApp</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/polls"
-              className="text-gray-700 hover:text-blue-600 transition-colors"
-            >
-              All Polls
-            </Link>
-          </nav>
-
           {/* User Menu */}
           <div className="hidden md:flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" asChild>
-                <Link href="/login">Login</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/register">Sign Up</Link>
-              </Button>
-            </div>
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" asChild>
+                  <Link href="/dashboard">
+                    <User className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/polls/create">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Poll
+                  </Link>
+                </Button>
+                <Button variant="ghost" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" asChild>
+                  <Link href="/login">Login</Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/register">Sign Up</Link>
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -65,26 +83,39 @@ export default function Header() {
         {isMenuOpen && (
           <div className="md:hidden border-t">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              <Link
-                href="/polls"
-                className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                All Polls
-              </Link>
-              
-              <div className="border-t pt-3 mt-3 space-y-2 px-3">
-                <Button variant="outline" asChild className="w-full">
-                  <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                    Login
-                  </Link>
-                </Button>
-                <Button asChild className="w-full">
-                  <Link href="/register" onClick={() => setIsMenuOpen(false)}>
-                    Sign Up
-                  </Link>
-                </Button>
-              </div>
+              {isAuthenticated ? (
+                <div className="space-y-2 px-3">
+                  <Button variant="outline" asChild className="w-full">
+                    <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                      <User className="h-4 w-4 mr-2" />
+                      Dashboard
+                    </Link>
+                  </Button>
+                  <Button asChild className="w-full">
+                    <Link href="/polls/create" onClick={() => setIsMenuOpen(false)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Poll
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" onClick={handleLogout} className="w-full">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                </div>
+              ) : (
+                <div className="border-t pt-3 mt-3 space-y-2 px-3">
+                  <Button variant="outline" asChild className="w-full">
+                    <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                      Login
+                    </Link>
+                  </Button>
+                  <Button asChild className="w-full">
+                    <Link href="/register" onClick={() => setIsMenuOpen(false)}>
+                      Sign Up
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         )}

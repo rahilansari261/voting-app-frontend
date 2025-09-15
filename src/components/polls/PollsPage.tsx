@@ -1,15 +1,14 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import PollCard from '@/components/polls/PollCard';
-import PaginationControls from '@/components/ui/pagination-controls';
-import { BarChart3, Plus } from 'lucide-react';
-import axiosInstance from '@/lib/axios';
-import { useQuery } from '@tanstack/react-query';
-import { Poll, User } from '@/types';
+"use client";
+import { useState } from "react";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { Poll } from "@/types";
+import PollCard from "./PollCard";
+import PaginationControls from "../ui/pagination-controls";
+import { BarChart3 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import axiosInstance from "@/lib/axios";
+import Link from "next/link";
 
 interface PaginatedPollsResponse {
   data: Poll[];
@@ -24,21 +23,8 @@ interface PaginatedPollsResponse {
 export default function PollsPage() {
   const [page, setPage] = useState(1);
   const [limit] = useState(9);
-  const [user, setUser] = useState<User | null>(null);
 
-  // Get user from localStorage instead of API call
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Error parsing user from localStorage:', error);
-      }
-    }
-  }, []);
-
-  const { data: pollsData, isLoading, isError, error } = useQuery({
+  const { data: pollsData, isLoading: pollsLoading } = useQuery({
     queryKey: ["polls", page, limit],
     queryFn: async () => {
       try {
@@ -94,9 +80,8 @@ export default function PollsPage() {
         throw error;
       }
     },
-  }); 
-
-  const isAuthenticated = !!user;
+  });
+  
   const polls = pollsData?.data || [];
   const pagination = pollsData?.pagination;
 
@@ -105,45 +90,25 @@ export default function PollsPage() {
     // Scroll to top when page changes
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  if (isError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-        <Card className="w-full max-w-md text-center p-8">
-          <CardTitle className="text-2xl font-bold text-red-600 mb-4">Error</CardTitle>
-          <CardDescription className="text-gray-700">
-            Failed to load polls: {error?.message || 'Unknown error'}
-          </CardDescription>
-        </Card>
-      </div>
-    );
-  }
-
+  
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <section className="bg-gray-50 pt-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-12">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">All Polls</h1>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">All Polls</h2>
+            <p className="text-xl text-gray-600">See what the community is voting on</p>
             {pagination && (
               <p className="text-sm text-gray-600 mt-2">
                 Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, pagination.total)} of {pagination.total} polls
               </p>
             )}
           </div>
-          {isAuthenticated && (
-            <Button asChild>
-              <Link href="/polls/create">
-                <Plus className="h-4 w-4 mr-2" />
-                Create New Poll
-              </Link>
-            </Button>
-          )}
         </div>
 
-        {isLoading ? (
+        {pollsLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+            {[1, 2, 3].map((i) => (
               <Card key={i} className="animate-pulse">
                 <CardHeader>
                   <div className="h-4 bg-gray-200 rounded w-3/4"></div>
@@ -158,7 +123,7 @@ export default function PollsPage() {
               </Card>
             ))}
           </div>
-        ) : polls && polls.length > 0 ? (
+        ) : polls.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {polls.map((poll: Poll) => (
@@ -179,11 +144,9 @@ export default function PollsPage() {
           <Card className="text-center p-12">
             <CardContent>
               <BarChart3 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <CardTitle className="text-xl mb-2">No polls available</CardTitle>
-              <CardDescription className="mb-6">
-                There are no polls to display at the moment.
-              </CardDescription>
-              {isAuthenticated && (
+              <CardTitle className="text-xl mb-2">No polls yet</CardTitle>
+              <CardDescription className="mb-6">Be the first to create a poll and start engaging with the community</CardDescription>
+              {true && (
                 <Button asChild>
                   <Link href="/polls/create">Create Your First Poll</Link>
                 </Button>
@@ -192,6 +155,6 @@ export default function PollsPage() {
           </Card>
         )}
       </div>
-    </div>
+    </section>
   );
 }
