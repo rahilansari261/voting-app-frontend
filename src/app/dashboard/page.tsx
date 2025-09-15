@@ -7,10 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import PollCard from "@/components/polls/PollCard";
 import { Plus, BarChart3, Users, Clock, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
-import { usePolls } from "@/hooks/usePolls";
+import { useQuery } from "@tanstack/react-query";
+import axiosInstance from "@/lib/axios";
+import { Poll } from "@/types";
 
 export default function DashboardPage() {
-  const { data: polls = [], isLoading: pollsLoading, error } = usePolls({ page: 1, limit: 50, published: true });
+  const { data: polls = [], isLoading: pollsLoading, error } = useQuery({
+    queryKey: ["polls"],
+    queryFn: () => axiosInstance.get("/polls").then((res) => res.data.data),
+  });
 
   // For now, we'll show all polls since we don't have user authentication yet
   const recentPolls = polls && polls.length > 0 ? polls.slice(0, 6) : [];
@@ -45,7 +50,7 @@ export default function DashboardPage() {
             <CardContent>
               <div className="text-2xl font-bold">{polls && polls.length > 0 ? polls.length : 0}</div>
               <p className="text-xs text-muted-foreground">
-                {polls && polls.length > 0 ? polls.filter((p) => p.published).length : 0} published
+                {polls && polls.length > 0 ? polls.filter((p: Poll) => p.published).length : 0} published
               </p>
             </CardContent>
           </Card>
@@ -56,7 +61,7 @@ export default function DashboardPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{polls && polls.length > 0 ? polls.reduce((sum, poll) => sum + poll.totalVotes, 0) : 0}</div>
+              <div className="text-2xl font-bold">{polls && polls.length > 0 ? polls.reduce((sum: number, poll: Poll) => sum + poll.totalVotes, 0) : 0}</div>
               <p className="text-xs text-muted-foreground">Across all polls</p>
             </CardContent>
           </Card>
@@ -67,7 +72,7 @@ export default function DashboardPage() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{polls && polls.length > 0 ? polls.filter((p) => p.published).length : 0}</div>
+              <div className="text-2xl font-bold">{polls && polls.length > 0 ? polls.filter((p: Poll) => p.published).length : 0}</div>
               <p className="text-xs text-muted-foreground">Currently running</p>
             </CardContent>
           </Card>
@@ -79,7 +84,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {polls.length > 0 ? Math.round(polls.reduce((sum, poll) => sum + poll.totalVotes, 0) / polls.length) : 0}
+                {polls.length > 0 ? Math.round(polls.reduce((sum: number, poll: Poll) => sum + poll.totalVotes, 0) / polls.length) : 0}
               </div>
               <p className="text-xs text-muted-foreground">Votes per poll</p>
             </CardContent>
@@ -130,7 +135,7 @@ export default function DashboardPage() {
             </div>
           ) : recentPolls.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recentPolls.map((poll) => (
+              {recentPolls.map((poll: Poll) => (
                 <PollCard key={poll.id} poll={poll} />
               ))}
             </div>
@@ -155,7 +160,7 @@ export default function DashboardPage() {
             <CardContent className="p-6">
               {polls && polls.length > 0 ? (
                 <div className="space-y-4">
-                  {polls?.slice(0, 5).map((poll) => (
+                  {polls?.slice(0, 5).map((poll: Poll) => (
                     <div key={poll.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
                       <div className="flex-1">
                         <Link href={`/polls/${poll.id}`} className="font-medium text-blue-600 hover:text-blue-800">

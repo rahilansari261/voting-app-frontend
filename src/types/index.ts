@@ -39,6 +39,7 @@ export interface Vote {
 }
 
 export interface CreatePollData {
+  id?: string;
   question: string;
   description?: string;
   options: { text: string }[];

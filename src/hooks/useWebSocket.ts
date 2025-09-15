@@ -1,13 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { useQueryClient } from '@tanstack/react-query';
-import { pollKeys } from './usePolls';
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000';
 
 export function useWebSocket() {
   const socketRef = useRef<Socket | null>(null);
-  const queryClient = useQueryClient();
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     // Initialize socket connection
@@ -17,34 +15,27 @@ export function useWebSocket() {
 
     const socket = socketRef.current;
 
+    // Connection status listeners
+    socket.on('connect', () => {
+      setIsConnected(true);
+    });
+
+    socket.on('disconnect', () => {
+      setIsConnected(false);
+    });
+
     // Listen for poll updates
     socket.on('poll-updated', (data) => {
       console.log('Poll updated:', data);
-      
-      // Invalidate poll queries to refetch updated data
-      queryClient.invalidateQueries({ queryKey: pollKeys.all });
-      
-      // Update specific poll in cache if we have the data
-      if (data.pollId && data.results) {
-        queryClient.setQueryData(pollKeys.detail(data.pollId), (oldData: any) => {
-          if (oldData) {
-            return {
-              ...oldData,
-              options: data.results.options,
-              totalVotes: data.results.totalVotes,
-            };
-          }
-          return oldData;
-        });
-      }
+      // You can add custom logic here to update local state
+      // or trigger a page refresh if needed
     });
 
     // Listen for new votes
     socket.on('vote-cast', (data) => {
       console.log('New vote cast:', data);
-      
-      // Invalidate poll queries to refetch updated data
-      queryClient.invalidateQueries({ queryKey: pollKeys.all });
+      // You can add custom logic here to update local state
+      // or trigger a page refresh if needed
     });
 
     // Listen for errors
@@ -58,7 +49,7 @@ export function useWebSocket() {
         socket.disconnect();
       }
     };
-  }, [queryClient]);
+  }, []);
 
   const joinPoll = (pollId: string) => {
     if (socketRef.current) {
@@ -75,6 +66,6 @@ export function useWebSocket() {
   return {
     joinPoll,
     leavePoll,
-    isConnected: socketRef.current?.connected || false,
+    isConnected,
   };
 }

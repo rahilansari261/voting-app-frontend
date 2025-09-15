@@ -8,10 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CreatePollData } from '@/types';
-import { useCreatePoll, useUpdatePoll } from '@/hooks/usePolls';
+import { CreatePollData, } from '@/types';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
+import axiosInstance from '@/lib/axios';
+import { toast } from 'sonner';
 
 const pollSchema = z.object({
   question: z.string().min(1, 'Question is required'),
@@ -36,8 +37,12 @@ export default function PollForm({
   onCancel, 
   isEditing = false 
 }: PollFormProps) {
-  const createPollMutation = useCreatePoll();
-  const updatePollMutation = useUpdatePoll();
+  const createPollMutation = useMutation({
+    mutationFn: (data: CreatePollData) => axiosInstance.post('/polls', data),
+  });
+  const updatePollMutation = useMutation({
+    mutationFn: (data: CreatePollData) => axiosInstance.put(`/polls/${data.id}`, data),
+  });
 
   const {
     register,
@@ -66,28 +71,22 @@ export default function PollForm({
     try {
       if (isEditing && initialData?.id) {
         await updatePollMutation.mutateAsync({
-          id: initialData.id,
-          data: {
-            question: data.question,
-            options: data.options,
-            published: data.published,
-          },
-        });
-        // Success handling is done in the useUpdatePoll hook
-      } else {
-        await createPollMutation.mutateAsync({
-          question: data.question,
+          id: initialData.id, 
+          question: data.question,  
           options: data.options,
           published: data.published,
         });
-        // Success handling is done in the useCreatePoll hook
+      } else {
+        const response = await axiosInstance.post('/polls', data);
+        if (response.data.success) {
+          toast.success(response.data.message);
+          onSuccess?.();
+        }
       }
-      
-      // Call success callback
-      onSuccess?.();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      // Error handling is done in the mutation hooks
       console.error('Poll operation failed:', error);
+      toast.error(error.response.data.message);
     }
   };
 

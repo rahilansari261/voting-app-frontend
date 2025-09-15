@@ -1,22 +1,37 @@
-'use client';
+"use client";
 
-import { useParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { usePoll, useVote, useUserVote } from '@/hooks/usePolls';
-import { useWebSocket } from '@/hooks/useWebSocket';
-import { ArrowLeft, Users, Clock, CheckCircle, BarChart3, Wifi, WifiOff } from 'lucide-react';
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useWebSocket } from "@/hooks/useWebSocket";
+import { ArrowLeft, Users, CheckCircle, BarChart3, Wifi, WifiOff } from "lucide-react";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import axiosInstance from "@/lib/axios";
+import { useMutation } from "@tanstack/react-query";
+import { PollOption } from "@/types";
 
 export default function PollDetailPage() {
   const params = useParams();
   const pollId = params.id as string;
-  const { data: poll, isLoading, error } = usePoll(pollId);
-  const { data: userVote } = useUserVote(pollId);
-  const voteMutation = useVote();
+  const {
+    data: poll,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["poll", pollId],
+    queryFn: () => axiosInstance.get(`/polls/${pollId}`).then((res) => res.data.data),
+  });
+  const { data: userVote } = useQuery({
+    queryKey: ["userVote", pollId],
+    queryFn: () => axiosInstance.get(`/polls/${pollId}/user-vote`).then((res) => res.data.data),
+  });
+  const voteMutation = useMutation({
+    mutationFn: (optionId: string) => axiosInstance.post(`/polls/${pollId}/vote`, { optionId }).then((res) => res.data.data),
+  });
   const { joinPoll, leavePoll, isConnected } = useWebSocket();
-  const [selectedOption, setSelectedOption] = useState<string>('');
+  const [selectedOption, setSelectedOption] = useState<string>("");
 
   useEffect(() => {
     if (userVote?.hasVoted && userVote.vote) {
@@ -34,12 +49,12 @@ export default function PollDetailPage() {
 
   const handleVote = async () => {
     if (!selectedOption) return;
-    
+
     try {
       await voteMutation.mutateAsync(selectedOption);
-      setSelectedOption('');
+      setSelectedOption("");
     } catch (error) {
-      console.error('Vote failed:', error);
+      console.error("Vote failed:", error);
     }
   };
 
@@ -64,9 +79,7 @@ export default function PollDetailPage() {
         <Card className="max-w-md w-full">
           <CardContent className="text-center p-8">
             <h2 className="text-xl font-semibold mb-4">Poll not found</h2>
-            <p className="text-gray-600 mb-6">
-              {error?.message || 'The poll you are looking for does not exist.'}
-            </p>
+            <p className="text-gray-600 mb-6">{error?.message || "The poll you are looking for does not exist."}</p>
             <Button asChild>
               <Link href="/polls">
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -97,7 +110,7 @@ export default function PollDetailPage() {
               <div>
                 <CardTitle className="text-2xl">{poll.question}</CardTitle>
                 <CardDescription className="text-base">
-                  {poll.published ? 'Published' : 'Draft'} • Created {new Date(poll.createdAt).toLocaleDateString()}
+                  {poll.published ? "Published" : "Draft"} • Created {new Date(poll.createdAt).toLocaleDateString()}
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2 text-sm">
@@ -114,7 +127,7 @@ export default function PollDetailPage() {
                 )}
               </div>
             </div>
-            
+
             <div className="flex items-center gap-6 text-sm text-gray-500 mt-4">
               <div className="flex items-center">
                 <Users className="h-4 w-4 mr-1" />
@@ -129,21 +142,17 @@ export default function PollDetailPage() {
 
           <CardContent className="space-y-6">
             <div className="space-y-3">
-              {poll.options.map((option) => (
+              {poll.options.map((option: PollOption) => (
                 <div
                   key={option.id}
                   className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedOption === option.id
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                    selectedOption === option.id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
                   }`}
                   onClick={() => handleOptionSelect(option.id)}
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{option.text}</span>
-                    {selectedOption === option.id && (
-                      <CheckCircle className="h-5 w-5 text-blue-600" />
-                    )}
+                    {selectedOption === option.id && <CheckCircle className="h-5 w-5 text-blue-600" />}
                   </div>
                   {option.voteCount > 0 && (
                     <div className="mt-2">
@@ -164,12 +173,8 @@ export default function PollDetailPage() {
             </div>
 
             {selectedOption && !userVote?.hasVoted && (
-              <Button
-                onClick={handleVote}
-                disabled={voteMutation.isPending}
-                className="w-full"
-              >
-                {voteMutation.isPending ? 'Voting...' : 'Submit Vote'}
+              <Button onClick={handleVote} disabled={voteMutation.isPending} className="w-full">
+                {voteMutation.isPending ? "Voting..." : "Submit Vote"}
               </Button>
             )}
 
@@ -180,17 +185,9 @@ export default function PollDetailPage() {
               </div>
             )}
 
-            {voteMutation.isError && (
-              <div className="text-red-600 text-sm text-center">
-                {voteMutation.error?.message || 'Failed to submit vote'}
-              </div>
-            )}
+            {voteMutation.isError && <div className="text-red-600 text-sm text-center">{voteMutation.error?.message || "Failed to submit vote"}</div>}
 
-            {voteMutation.isSuccess && (
-              <div className="text-green-600 text-sm text-center">
-                Vote submitted successfully!
-              </div>
-            )}
+            {voteMutation.isSuccess && <div className="text-green-600 text-sm text-center">Vote submitted successfully!</div>}
           </CardContent>
         </Card>
       </div>

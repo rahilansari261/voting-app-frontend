@@ -1,18 +1,25 @@
 'use client';
 
-import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import PollCard from '@/components/polls/PollCard';
 import { BarChart3, Users, Shield, Clock, Plus, ArrowRight } from 'lucide-react';
-import { usePolls } from '@/hooks/usePolls';
-import { useProfile } from '@/hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
+import axiosInstance from '@/lib/axios';
+import { Poll } from '@/types';
+
 
 export default function HomePage() {
-  const { data: user, isLoading: isProfileLoading } = useProfile();
+  const { data: user, isLoading: isProfileLoading } = useQuery({
+    queryKey: ["user"],
+    queryFn: () => axiosInstance.get("/users/me").then((res) => res.data.data),
+  });
   const isAuthenticated = !!user;
-  const { data: polls, isLoading: pollsLoading } = usePolls({ page: 1, limit: 3, published: true });
+  const { data: polls, isLoading: pollsLoading } = useQuery({
+    queryKey: ["polls"],
+    queryFn: () => axiosInstance.get("/polls").then((res) => res.data.data),
+  });
 
   const recentPolls = polls || [];
 
@@ -151,7 +158,7 @@ export default function HomePage() {
             </div>
           ) : recentPolls.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recentPolls.map((poll) => (
+              {recentPolls.map((poll: Poll) => (
                 <PollCard key={poll.id} poll={poll} />
               ))}
             </div>

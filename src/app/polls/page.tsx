@@ -1,19 +1,46 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import PollCard from '@/components/polls/PollCard';
 import { BarChart3, Plus } from 'lucide-react';
-import { usePolls } from '@/hooks/usePolls';
-import { useProfile } from '@/hooks/useAuth';
+import axiosInstance from '@/lib/axios';
+import { useQuery } from '@tanstack/react-query';
+import { Poll, User } from '@/types';
 
 export default function PollsPage() {
   const [page, setPage] = useState(1);
   const [limit] = useState(9);
-  const { data: polls, isLoading, isError, error } = usePolls({ page, limit, published: true });
-  const { data: user } = useProfile();
+  const [user, setUser] = useState<User | null>(null);
+
+  // Get user from localStorage instead of API call
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Error parsing user from localStorage:', error);
+      }
+    }
+  }, []);
+
+  const { data: polls, isLoading, isError, error } = useQuery({
+    queryKey: ["polls"],
+    queryFn: async () => {
+      try {
+        const response = await axiosInstance.get("/polls");
+        console.log('Polls response:', response.data);
+        return response.data.data?.data || response.data.data || response.data;
+      } catch (error) {
+        console.error('Polls API error:', error);
+        throw error;
+      }
+    },
+  }); 
+
   const isAuthenticated = !!user;
 
   if (isError) {
@@ -63,7 +90,7 @@ export default function PollsPage() {
           </div>
         ) : polls && polls.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {polls.map((poll) => (
+            {polls.map((poll: Poll) => (
               <PollCard key={poll.id} poll={poll} />
             ))}
           </div>

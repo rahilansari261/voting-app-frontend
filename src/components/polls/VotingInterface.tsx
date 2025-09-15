@@ -1,15 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Poll } from '@/types';
-import { useVote } from '@/hooks/usePolls';
+import { Poll, PollOption } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Loader2, CheckCircle, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
+import axiosInstance from '@/lib/axios';
+import { useMutation } from '@tanstack/react-query';
 
 interface VotingInterfaceProps {
   poll: Poll;
@@ -18,7 +18,9 @@ interface VotingInterfaceProps {
 
 export default function VotingInterface({ poll, onViewResults }: VotingInterfaceProps) {
   const [selectedOption, setSelectedOption] = useState<string>(poll.userVote || '');
-  const voteMutation = useVote();
+  const voteMutation = useMutation({
+    mutationFn: (optionId: string) => axiosInstance.post(`/polls/${poll.id}/vote`, { optionId }).then((res) => res.data.data),
+  });
 
   const canVote = poll.published && !poll.userVote;
 
@@ -34,7 +36,7 @@ export default function VotingInterface({ poll, onViewResults }: VotingInterface
     try {
       await voteMutation.mutateAsync(selectedOption);
       // Success handling is done in the useVote hook
-    } catch (error: any) {
+    } catch (error) {
       // Error handling is done in the useVote hook
       console.error('Vote failed:', error);
     }
@@ -62,7 +64,7 @@ export default function VotingInterface({ poll, onViewResults }: VotingInterface
         {canVote ? (
           <div className="space-y-4">
             <RadioGroup value={selectedOption} onValueChange={handleOptionChange}>
-              {poll.options.map((option) => (
+              {poll.options.map((option: PollOption) => (
                 <div key={option.id} className="flex items-center space-x-2">
                   <RadioGroupItem value={option.id} id={option.id} />
                   <Label htmlFor={option.id} className="flex-1 cursor-pointer">
