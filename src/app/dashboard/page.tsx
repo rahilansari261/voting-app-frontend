@@ -9,7 +9,7 @@ import { Plus, BarChart3, Users, Clock, TrendingUp, AlertCircle, RefreshCw } fro
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "@/lib/axios";
-import { Poll } from "@/types";
+import { Poll, DashboardStats } from "@/types";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
 import { useUserStore } from "@/store/userStore";
 import { useState } from "react";
@@ -20,21 +20,21 @@ export default function DashboardPage() {
   const [retryCount, setRetryCount] = useState(0);
 
   const {
-    data: polls = [],
+    data: dashboardStats,
     isLoading: pollsLoading,
     error,
     refetch,
     isError,
   } = useQuery({
-    queryKey: ["polls", retryCount],
+    queryKey: ["dashboard-stats", retryCount],
     queryFn: async () => {
       try {
-        const response = await axiosInstance.get("/polls/dashboard");
-        return response.data.data || response.data || [];
+        const response = await axiosInstance.get("/polls/dashboard/stats");
+        return response.data.data as DashboardStats;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
-        console.error("Error fetching polls:", err);
-        throw new Error(err.response?.data?.message || "Failed to fetch polls");
+        console.error("Error fetching dashboard stats:", err);
+        throw new Error(err.response?.data?.message || "Failed to fetch dashboard stats");
       }
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -44,15 +44,6 @@ export default function DashboardPage() {
     },
     staleTime: 30000, // 30 seconds
   });
-
-  // Separate polls by user's polls vs all polls
-  console.log("polls", polls);
-  const userPolls = polls?.data?.filter((p: Poll) => p.createdBy === user?.id) || [];
-  const recentPolls = polls?.data?.slice(0, 5) || [];
-  const publishedPolls = polls?.data?.filter((p: Poll) => p.published) || [];
-  const draftPolls = polls?.data?.filter((p: Poll) => !p.published) || [];
-  const userPublishedPolls = userPolls?.filter((p: Poll) => p.published) || [];
-  const userDraftPolls = userPolls?.filter((p: Poll) => !p.published) || [];
 
   const handleRetry = () => {
     setRetryCount((prev) => prev + 1);
@@ -139,6 +130,13 @@ export default function DashboardPage() {
     );
   }
 
+  // Extract data from the new API structure
+  const myPolls = dashboardStats?.myPolls || { total: 0, published: 0, drafts: 0 };
+  const recentPolls = dashboardStats?.recentPolls || [];
+  const totalVotes = dashboardStats?.totalVotes || 0;
+  const activePolls = dashboardStats?.activePolls || 0;
+  const allPublishedPolls = dashboardStats?.allPublishedPolls || 0;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -156,8 +154,8 @@ export default function DashboardPage() {
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userPolls.length}</div>
-              <p className="text-xs text-muted-foreground">{userPublishedPolls.length} published</p>
+              <div className="text-2xl font-bold">{myPolls.total}</div>
+              <p className="text-xs text-muted-foreground">{myPolls.published} published</p>
             </CardContent>
           </Card>
 
@@ -167,7 +165,7 @@ export default function DashboardPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{polls?.data?.reduce((sum: number, poll: Poll) => sum + (poll.totalVotes || 0), 0)}</div>
+              <div className="text-2xl font-bold">{totalVotes}</div>
               <p className="text-xs text-muted-foreground">Across all polls</p>
             </CardContent>
           </Card>
@@ -178,7 +176,7 @@ export default function DashboardPage() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{publishedPolls.filter((p: Poll) => !p.endDate || new Date(p.endDate) > new Date()).length}</div>
+              <div className="text-2xl font-bold">{activePolls}</div>
               <p className="text-xs text-muted-foreground">Currently running</p>
             </CardContent>
           </Card>
@@ -189,7 +187,7 @@ export default function DashboardPage() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userDraftPolls.length}</div>
+              <div className="text-2xl font-bold">{myPolls.drafts}</div>
               <p className="text-xs text-muted-foreground">Unpublished polls</p>
             </CardContent>
           </Card>
@@ -205,13 +203,8 @@ export default function DashboardPage() {
                 Create New Poll
               </Link>
             </Button>
-            <Button variant="outline" asChild>
-              <Link href="/polls">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                View All Polls
-              </Link>
-            </Button>
-            {userPolls.length > 0 && (
+            
+            {myPolls.total > 0 && (
               <Button variant="outline" asChild>
                 <Link href="/polls?filter=my-polls">
                   <Users className="h-4 w-4 mr-2" />
@@ -249,7 +242,7 @@ export default function DashboardPage() {
                 <CardHeader>
                   <CardTitle className="text-sm font-medium flex items-center justify-between">
                     My Published Polls
-                    <Badge variant="secondary">{userPublishedPolls.length}</Badge>
+                    <Badge variant="secondary">{myPolls.published}</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -261,7 +254,7 @@ export default function DashboardPage() {
                 <CardHeader>
                   <CardTitle className="text-sm font-medium flex items-center justify-between">
                     My Draft Polls
-                    <Badge variant="outline">{userDraftPolls.length}</Badge>
+                    <Badge variant="outline">{myPolls.drafts}</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -273,7 +266,7 @@ export default function DashboardPage() {
                 <CardHeader>
                   <CardTitle className="text-sm font-medium flex items-center justify-between">
                     All Published Polls
-                    <Badge variant="secondary">{publishedPolls.length}</Badge>
+                    <Badge variant="secondary">{allPublishedPolls}</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

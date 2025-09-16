@@ -13,11 +13,16 @@ export interface Poll {
   description?: string;
   options: PollOption[];
   published: boolean;
+  isPublished?: boolean; // Alternative field name from API
   allowMultiple?: boolean;
   isAnonymous?: boolean;
   startDate?: string;
   endDate?: string;
   createdBy: string;
+  creator?: {
+    id: string;
+    name: string;
+  };
   createdAt: string;
   updatedAt?: string;
   totalVotes: number;
@@ -60,6 +65,21 @@ export interface PollResults {
 export interface UserVote {
   hasVoted: boolean;
   vote?: Vote;
+}
+
+// Dashboard stats interfaces
+export interface MyPollsStats {
+  total: number;
+  published: number;
+  drafts: number;
+}
+
+export interface DashboardStats {
+  myPolls: MyPollsStats;
+  totalVotes: number;
+  activePolls: number;
+  recentPolls: Poll[];
+  allPublishedPolls: number;
 }
 
 // Updated to match actual API response structure

@@ -66,6 +66,7 @@ export default function PollDetailPage() {
       setHasVoted(true);
       refetch();
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       console.error("Vote failed:", error);
     },

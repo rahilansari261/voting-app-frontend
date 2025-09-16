@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import PollCard from '@/components/polls/PollCard';
@@ -22,6 +23,10 @@ interface PaginatedPollsResponse {
 }
 
 export default function PollsPage() {
+  const searchParams = useSearchParams();
+  const filter = searchParams.get('filter');
+  const isMyPolls = filter === 'my-polls';
+  
   const [page, setPage] = useState(1);
   const [limit] = useState(9);
   const [user, setUser] = useState<User | null>(null);
@@ -39,10 +44,17 @@ export default function PollsPage() {
   }, []);
 
   const { data: pollsData, isLoading, isError, error } = useQuery({
-    queryKey: ["polls", page, limit],
+    queryKey: ["polls", page, limit, filter],
     queryFn: async () => {
       try {
-        const response = await axiosInstance.get(`/polls?page=${page}&limit=${limit}`);
+        let apiUrl = `/polls?page=${page}&limit=${limit}`;
+        
+        // If filtering for user's polls, add the filter parameter
+        if (isMyPolls) {
+          apiUrl += '&filter=my-polls';
+        }
+        
+        const response = await axiosInstance.get(apiUrl);
         console.log('Polls response:', response.data);
         
         // Handle different response structures
@@ -124,7 +136,9 @@ export default function PollsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">All Polls</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {isMyPolls ? 'My Polls' : 'All Polls'}
+            </h1>
             {pagination && (
               <p className="text-sm text-gray-600 mt-2">
                 Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, pagination.total)} of {pagination.total} polls
@@ -179,9 +193,14 @@ export default function PollsPage() {
           <Card className="text-center p-12">
             <CardContent>
               <BarChart3 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <CardTitle className="text-xl mb-2">No polls available</CardTitle>
+              <CardTitle className="text-xl mb-2">
+                {isMyPolls ? 'No polls created yet' : 'No polls available'}
+              </CardTitle>
               <CardDescription className="mb-6">
-                There are no polls to display at the moment.
+                {isMyPolls 
+                  ? "You haven't created any polls yet. Create your first poll to get started!"
+                  : "There are no polls to display at the moment."
+                }
               </CardDescription>
               {isAuthenticated && (
                 <Button asChild>
