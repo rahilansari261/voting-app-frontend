@@ -19,7 +19,7 @@ interface VotingInterfaceProps {
 export default function VotingInterface({ poll, onViewResults }: VotingInterfaceProps) {
   const [selectedOption, setSelectedOption] = useState<string>(poll.userVote || '');
   const voteMutation = useMutation({
-    mutationFn: (optionId: string) => axiosInstance.post(`/polls/${poll.id}/vote`, { optionId }).then((res) => res.data.data),
+    mutationFn: (optionId: string) => axiosInstance.post(`/votes`, { optionId }).then((res) => res.data.data),
   });
 
   const canVote = poll.isPublished && !poll.userVote;

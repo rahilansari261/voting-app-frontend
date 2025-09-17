@@ -11,10 +11,12 @@ import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "@/lib/axios";
 import { useMutation } from "@tanstack/react-query";
 import { PollOption } from "@/types";
+import { useAuth } from "@/hooks/useAuth";
 // import { useRouteGuard } from "@/hooks/useRouteGuard";
 
 export default function PollDetailPage() {
   // const { isChecking } = useRouteGuard({ requireAuth: false });
+  const { isAuthenticated } = useAuth();
   const params = useParams();
   const pollId = params.id as string;
   const {
@@ -57,7 +59,7 @@ export default function PollDetailPage() {
 
   const voteMutation = useMutation({
     mutationFn: async (optionIds: string[]) => {
-      const response = await axiosInstance.post(`/polls/${pollId}/vote`, {
+      const response = await axiosInstance.post(`/votes`, {
         optionIds,
       });
       return response.data;
@@ -73,6 +75,7 @@ export default function PollDetailPage() {
   });
 
   const handleOptionSelect = (optionId: string) => {
+    if (!isAuthenticated) return;
     if (hasVoted) return;
 
     if (poll?.allowMultiple) {
@@ -200,21 +203,25 @@ export default function PollDetailPage() {
             <CardHeader>
               <CardTitle>Cast Your Vote</CardTitle>
               <CardDescription>
-                {poll.allowMultiple
-                  ? "Select one or more options"
-                  : "Select one option"}
+                {isAuthenticated 
+                  ? (poll.allowMultiple
+                      ? "Select one or more options"
+                      : "Select one option")
+                  : "Please login to vote in this poll"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {poll.options.map((option: PollOption) => (
                 <div
                   key={option.id}
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedOptions.includes(option.id)
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300"
+                  className={`p-4 border rounded-lg transition-colors ${
+                    !isAuthenticated 
+                      ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-60"
+                      : selectedOptions.includes(option.id)
+                        ? "border-blue-500 bg-blue-50 cursor-pointer"
+                        : "border-gray-200 hover:border-gray-300 cursor-pointer"
                   }`}
-                  onClick={() => handleOptionSelect(option.id)}
+                  onClick={() => isAuthenticated && handleOptionSelect(option.id)}
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{option.text}</span>
@@ -222,29 +229,51 @@ export default function PollDetailPage() {
                       <input
                         type="checkbox"
                         checked={selectedOptions.includes(option.id)}
-                        onChange={() => handleOptionSelect(option.id)}
-                        className="h-4 w-4 text-blue-600"
+                        onChange={() => isAuthenticated && handleOptionSelect(option.id)}
+                        disabled={!isAuthenticated}
+                        className="h-4 w-4 text-blue-600 disabled:opacity-50"
                       />
                     ) : (
                       <input
                         type="radio"
                         name="poll-option"
                         checked={selectedOptions.includes(option.id)}
-                        onChange={() => handleOptionSelect(option.id)}
-                        className="h-4 w-4 text-blue-600"
+                        onChange={() => isAuthenticated && handleOptionSelect(option.id)}
+                        disabled={!isAuthenticated}
+                        className="h-4 w-4 text-blue-600 disabled:opacity-50"
                       />
                     )}
                   </div>
                 </div>
               ))}
 
-              <Button
-                onClick={handleVote}
-                disabled={selectedOptions.length === 0 || isSubmitting}
-                className="w-full"
-              >
-                {isSubmitting ? "Submitting..." : "Submit Vote"}
-              </Button>
+              {isAuthenticated ? (
+                <Button
+                  onClick={handleVote}
+                  disabled={selectedOptions.length === 0 || isSubmitting}
+                  className="w-full"
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Vote"}
+                </Button>
+              ) : (
+                <div className="text-center space-y-3">
+                  <p className="text-gray-600">
+                    You need to be logged in to cast your vote
+                  </p>
+                  <div className="space-x-3">
+                    <Button asChild>
+                      <Link href={`/login?redirect=/polls/${pollId}`}>
+                        Login
+                      </Link>
+                    </Button>
+                    <Button variant="outline" asChild>
+                      <Link href={`/register?redirect=/polls/${pollId}`}>
+                        Register
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         ) : hasVoted ? (

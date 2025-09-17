@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
@@ -32,6 +33,7 @@ export default function RegisterForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
   const { login } = useUserStore();
+  const searchParams = useSearchParams();
 
   const {
     register,
@@ -55,8 +57,9 @@ export default function RegisterForm() {
         if (response.data.data?.token && response.data.data?.user) {
           login(response.data.data.user, response.data.data.token);
         }
-        toast.success(response.data.message);
-        router.push("/dashboard");
+        // Redirect to the intended page or dashboard
+        const redirect = searchParams.get('redirect');
+        router.push(redirect || '/dashboard');
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {

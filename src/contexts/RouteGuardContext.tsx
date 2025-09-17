@@ -31,7 +31,7 @@ export function RouteGuardProvider({ children }: RouteGuardProviderProps) {
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   
   // Define dynamic protected routes (like /polls/[id])
-  const isDynamicProtectedRoute = pathname.startsWith('/polls/') && pathname !== '/polls';
+  const isDynamicProtectedRoute = false; // Allow access to polls/[id] routes
   
   // Define auth routes (login/register)
   const authRoutes = ['/login', '/register'];
@@ -39,17 +39,15 @@ export function RouteGuardProvider({ children }: RouteGuardProviderProps) {
 
   useEffect(() => {
     const checkAuth = async () => {
-      // Check if user is authenticated
-      const token = localStorage.getItem('token');
-      const user = localStorage.getItem('user');
-      
-      if (!token || !user) {
+      if (!isAuthenticated) {
+        console.log("RouteGuard: User not authenticated, pathname:", pathname, "isProtected:", isProtectedRoute, "isDynamicProtected:", isDynamicProtectedRoute);
         // No authentication data
         if (isProtectedRoute || isDynamicProtectedRoute) {
           // Redirect to login with current path as redirect
           router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
           return;
         }
+        console.log("RouteGuard: User authenticated, pathname:", pathname, "isAuthRoute:", isAuthRoute);
       } else if (isAuthRoute) {
         // User is authenticated but trying to access auth pages
         router.push('/dashboard');
