@@ -12,6 +12,7 @@ import axiosInstance from "@/lib/axios";
 import { useMutation } from "@tanstack/react-query";
 import { PollOption } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 // import { useRouteGuard } from "@/hooks/useRouteGuard";
 
 export default function PollDetailPage() {
@@ -64,13 +65,35 @@ export default function PollDetailPage() {
       });
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setHasVoted(true);
       refetch();
+      toast.success("Vote submitted successfully!");
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       console.error("Vote failed:", error);
+      
+      // Extract error message from API response
+      let errorMessage = "Failed to submit vote. Please try again.";
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status === 409) {
+        errorMessage = "You have already voted on this poll";
+      } else if (error.response?.status === 401) {
+        errorMessage = "Please login to vote in this poll";
+      } else if (error.response?.status === 403) {
+        errorMessage = "You are not authorized to vote in this poll";
+      } else if (error.response?.status === 404) {
+        errorMessage = "Poll not found";
+      } else if (error.response?.status >= 500) {
+        errorMessage = "Server error. Please try again later.";
+      } else if (error.code === "ERR_NETWORK" || error.message?.includes("Network Error")) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      }
+      
+      toast.error(errorMessage);
     },
   });
 
