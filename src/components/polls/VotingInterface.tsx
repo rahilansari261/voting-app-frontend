@@ -22,7 +22,7 @@ export default function VotingInterface({ poll, onViewResults }: VotingInterface
     mutationFn: (optionId: string) => axiosInstance.post(`/polls/${poll.id}/vote`, { optionId }).then((res) => res.data.data),
   });
 
-  const canVote = poll.published && !poll.userVote;
+  const canVote = poll.isPublished && !poll.userVote;
 
   const handleOptionChange = (optionId: string) => {
     setSelectedOption(optionId);
@@ -47,7 +47,7 @@ export default function VotingInterface({ poll, onViewResults }: VotingInterface
       <CardHeader>
         <CardTitle className="text-2xl font-bold">{poll.question}</CardTitle>
         <CardDescription>
-          {poll.published ? 'Published' : 'Draft'} • Created {format(new Date(poll.createdAt), 'MMM dd, yyyy')}
+          {poll.isPublished ? 'Published' : 'Draft'} • Created {format(new Date(poll.createdAt), 'MMM dd, yyyy')}
         </CardDescription>
       </CardHeader>
       
@@ -97,7 +97,7 @@ export default function VotingInterface({ poll, onViewResults }: VotingInterface
               Thank you for participating in this poll.
             </p>
           </div>
-        ) : !poll.published ? (
+        ) : !poll.isPublished ? (
           <div className="text-center p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
             <h3 className="text-lg font-semibold text-yellow-800 mb-2">Poll Not Published</h3>
             <p className="text-yellow-700">

@@ -11,10 +11,10 @@ import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "@/lib/axios";
 import { useMutation } from "@tanstack/react-query";
 import { PollOption } from "@/types";
-import { useRouteGuard } from "@/hooks/useRouteGuard";
+// import { useRouteGuard } from "@/hooks/useRouteGuard";
 
 export default function PollDetailPage() {
-  const { isChecking } = useRouteGuard({ requireAuth: true });
+  // const { isChecking } = useRouteGuard({ requireAuth: false });
   const params = useParams();
   const pollId = params.id as string;
   const {
@@ -97,16 +97,16 @@ export default function PollDetailPage() {
     }
   };
 
-  if (isChecking) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (isChecking) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+  //         <p className="mt-2 text-gray-600">Checking authentication...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   if (isLoading) {
     return (
@@ -132,7 +132,7 @@ export default function PollDetailPage() {
     );
   }
 
-  const isPollActive = poll.published && (!poll.endDate || new Date(poll.endDate) > new Date());
+  const isPollActive = poll.isPublished && (!poll.endDate || new Date(poll.endDate) > new Date());
 
   return (
     <div className="min-h-screen bg-gray-50">

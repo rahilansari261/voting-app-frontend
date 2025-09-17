@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import PollCard from "@/components/polls/PollCard";
 import { Plus, BarChart3, Users, Clock, TrendingUp, AlertCircle, RefreshCw } from "lucide-react";
-import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "@/lib/axios";
 import { Poll, DashboardStats } from "@/types";
@@ -203,7 +202,7 @@ export default function DashboardPage() {
                 Create New Poll
               </Link>
             </Button>
-            
+
             {myPolls.total > 0 && (
               <Button variant="outline" asChild>
                 <Link href="/polls?filter=my-polls">
