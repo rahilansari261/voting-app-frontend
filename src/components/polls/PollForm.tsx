@@ -19,7 +19,7 @@ const pollSchema = z.object({
   options: z.array(z.object({
     text: z.string().min(1, 'Option text is required'),
   })).min(2, 'At least 2 options are required'),
-  published: z.boolean(),
+  isPublished: z.boolean(),
 });
 
 type PollFormData = z.infer<typeof pollSchema>;
@@ -58,7 +58,7 @@ export default function PollForm({
         { text: '' },
         { text: '' },
       ],
-      published: initialData?.published || false,
+      isPublished: initialData?.isPublished || false,
     },
   });
 
@@ -74,7 +74,7 @@ export default function PollForm({
           id: initialData.id, 
           question: data.question,  
           options: data.options,
-          published: data.published,
+          isPublished: data.isPublished,
         });
       } else {
         const response = await axiosInstance.post('/polls', data);
@@ -166,11 +166,11 @@ export default function PollForm({
           <div className="flex items-center space-x-2">
             <input
               type="checkbox"
-              id="published"
-              {...register('published')}
+              id="isPublished"
+              {...register('isPublished')}
               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-            <Label htmlFor="published" className="text-sm">
+            <Label htmlFor="isPublished" className="text-sm">
               Publish this poll immediately
             </Label>
           </div>

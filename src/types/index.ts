@@ -12,8 +12,7 @@ export interface Poll {
   question: string;
   description?: string;
   options: PollOption[];
-  published: boolean;
-  isPublished?: boolean; // Alternative field name from API
+  isPublished: boolean;
   allowMultiple?: boolean;
   isAnonymous?: boolean;
   startDate?: string;
@@ -52,7 +51,7 @@ export interface CreatePollData {
   isAnonymous?: boolean;
   startDate?: string;
   endDate?: string;
-  published: boolean;
+  isPublished: boolean;
 }
 
 export interface PollResults {

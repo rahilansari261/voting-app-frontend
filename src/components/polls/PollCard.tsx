@@ -29,7 +29,7 @@ export default function PollCard({
       : 'bg-yellow-100 text-yellow-800';
   };
 
-  const canVote = poll.published && !poll.userVote;
+  const canVote = poll.isPublished && !poll.userVote;
 
   const handleViewPoll = () => {
     router.push(`/polls/${poll.id}`);
@@ -60,11 +60,11 @@ export default function PollCard({
               {poll.question}
             </CardTitle>
             <CardDescription className="mt-2 line-clamp-2">
-              {poll.published ? 'Published' : 'Draft'} • Created {format(new Date(poll.createdAt), 'MMM dd, yyyy')}
+              {poll.isPublished ? 'Published' : 'Draft'} • Created {format(new Date(poll.createdAt), 'MMM dd, yyyy')}
             </CardDescription>
           </div>
-          <Badge className={`ml-2 ${getStatusColor(poll.published)}`}>
-            {poll.published ? 'PUBLISHED' : 'DRAFT'}
+          <Badge className={`ml-2 ${getStatusColor(poll.isPublished)}`}>
+            {poll.isPublished ? 'PUBLISHED' : 'DRAFT'}
           </Badge>
         </div>
       </CardHeader>
@@ -141,7 +141,7 @@ export default function PollCard({
                 </Button>
               )}
               
-              {poll.published && (
+              {poll.isPublished && (
                 <Button
                   variant="outline"
                   size="sm"
