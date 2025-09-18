@@ -43,7 +43,6 @@ function LoginFormContent() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       const response = await axiosInstance.post("/users/login", data);
-      console.log("response 2", response);
       if (response.data.success) {
         if (response.data.data?.token && response.data.data?.user) {
           login(response.data.data.user, response.data.data.token);
