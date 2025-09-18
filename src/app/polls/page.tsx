@@ -28,7 +28,7 @@ export default function PollsPage() {
   const isMyPolls = filter === 'my-polls';
   
   const [page, setPage] = useState(1);
-  const [limit] = useState(9);
+  const [limit] = useState(10);
   const [user, setUser] = useState<User | null>(null);
 
   // Get user from localStorage instead of API call
