@@ -22,7 +22,7 @@ interface PaginatedPollsResponse {
 
 export default function PollsPage() {
   const [page, setPage] = useState(1);
-  const [limit] = useState(9);
+  const [limit] = useState(10);
 
   const { data: pollsData, isLoading: pollsLoading } = useQuery({
     queryKey: ["polls", page, limit],
