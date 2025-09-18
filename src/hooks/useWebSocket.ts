@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { Poll } from '@/types';
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000';
 
@@ -22,20 +23,6 @@ export function useWebSocket() {
 
     socket.on('disconnect', () => {
       setIsConnected(false);
-    });
-
-    // Listen for poll updates
-    socket.on('poll-updated', (data) => {
-      console.log('Poll updated:', data);
-      // You can add custom logic here to update local state
-      // or trigger a page refresh if needed
-    });
-
-    // Listen for new votes
-    socket.on('vote-cast', (data) => {
-      console.log('New vote cast:', data);
-      // You can add custom logic here to update local state
-      // or trigger a page refresh if needed
     });
 
     // Listen for errors
@@ -63,9 +50,37 @@ export function useWebSocket() {
     }
   };
 
+  const onPollUpdate = useCallback((callback: (pollData: Poll) => void) => {
+    if (socketRef.current) {
+      socketRef.current.on('poll-updated', callback);
+    }
+  }, []);
+
+  // const onVoteCast = useCallback((callback: (voteData: any) => void) => {
+  //   if (socketRef.current) {
+  //     socketRef.current.on('vote-cast', callback);
+  //   }
+  // }, []);
+
+  const removePollUpdateListener = useCallback(() => {
+    if (socketRef.current) {
+      socketRef.current.off('poll-updated');
+    }
+  }, []);
+
+  // const removeVoteCastListener = useCallback(() => {
+  //   if (socketRef.current) {
+  //     socketRef.current.off('vote-cast');
+  //   }
+  // }, []);
+
   return {
     joinPoll,
     leavePoll,
+    onPollUpdate,
+    // onVoteCast,
+    removePollUpdateListener,
+    // removeVoteCastListener,
     isConnected,
   };
 }

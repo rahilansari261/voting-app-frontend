@@ -6,11 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { ArrowLeft, Users, CheckCircle, BarChart3, Wifi, WifiOff } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "@/lib/axios";
 import { useMutation } from "@tanstack/react-query";
-import { PollOption } from "@/types";
+import { PollOption, Poll } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 // import { useRouteGuard } from "@/hooks/useRouteGuard";
@@ -33,9 +33,53 @@ export default function PollDetailPage() {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [hasVoted, setHasVoted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [animatingOptions, setAnimatingOptions] = useState<Set<string>>(new Set());
 
   // WebSocket connection for real-time updates
-  const { joinPoll, leavePoll, isConnected } = useWebSocket();
+  const { 
+    joinPoll, 
+    leavePoll, 
+    onPollUpdate, 
+    // onVoteCast, 
+    removePollUpdateListener, 
+    // removeVoteCastListener,
+    isConnected 
+  } = useWebSocket();
+
+  // Handle real-time poll updates
+  const handlePollUpdate = useCallback((pollData: Poll) => {
+    // Update the query cache with new poll data
+    refetch();
+    
+    // Show toast notification
+    
+    toast.success("Poll updated! Someone just voted.", {
+      duration: 3000,
+    });
+  }, [refetch]);
+
+  // // Handle new vote cast events
+  // // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // const handleVoteCast = useCallback((voteData: any) => {
+  //   // Trigger animation for the voted option
+  //   if (voteData.optionId) {
+  //     setAnimatingOptions(prev => new Set([...prev, voteData.optionId]));
+      
+  //     // Remove animation after 2 seconds
+  //     setTimeout(() => {
+  //       setAnimatingOptions(prev => {
+  //         const newSet = new Set(prev);
+  //         newSet.delete(voteData.optionId);
+  //         return newSet;
+  //       });
+  //     }, 2000);
+  //   }
+    
+  //   // Show toast notification
+  //   toast.info("Someone just voted in this poll!", {
+  //     duration: 3000,
+  //   });
+  // }, []);
 
   // Check if user has already voted
   useEffect(() => {
@@ -52,11 +96,17 @@ export default function PollDetailPage() {
     if (pollId) {
       joinPoll(pollId);
       
+      // Set up event listeners
+      onPollUpdate(handlePollUpdate);
+      // onVoteCast(handleVoteCast);
+      
       return () => {
         leavePoll(pollId);
+        removePollUpdateListener();
+        // removeVoteCastListener();
       };
     }
-  }, [pollId, joinPoll, leavePoll]);
+  }, [pollId, joinPoll, leavePoll, onPollUpdate, handlePollUpdate, removePollUpdateListener]);
 
   const voteMutation = useMutation({
     mutationFn: async (optionIds: string[]) => {
@@ -237,12 +287,16 @@ export default function PollDetailPage() {
               {poll.options.map((option: PollOption) => (
                 <div
                   key={option.id}
-                  className={`p-4 border rounded-lg transition-colors ${
+                  className={`p-4 border rounded-lg transition-all duration-300 ${
                     !isAuthenticated 
                       ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-60"
                       : selectedOptions.includes(option.id)
                         ? "border-blue-500 bg-blue-50 cursor-pointer"
                         : "border-gray-200 hover:border-gray-300 cursor-pointer"
+                  } ${
+                    animatingOptions.has(option.id) 
+                      ? "animate-pulse border-green-400 bg-green-50 shadow-lg" 
+                      : ""
                   }`}
                   onClick={() => isAuthenticated && handleOptionSelect(option.id)}
                 >
@@ -340,11 +394,19 @@ export default function PollDetailPage() {
                     {option.voteCount} votes ({option.percentage.toFixed(1)}%)
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 rounded-full h-2 relative overflow-hidden">
                   <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    className={`bg-blue-600 h-2 rounded-full transition-all duration-1000 ease-out ${
+                      animatingOptions.has(option.id) 
+                        ? "animate-pulse shadow-lg" 
+                        : ""
+                    }`}
                     style={{ width: `${option.percentage}%` }}
-                  ></div>
+                  >
+                    {animatingOptions.has(option.id) && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-600 animate-pulse"></div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
